@@ -37,6 +37,8 @@
         <tr>
           <th scope="col">Sku</th>
           <th scope="col">Producto</th>
+          <th scope="col">Precio</th>
+          <th scope="col">Cantidad</th>
           <th scope="col">Total</th>
           <th scope="col">Acción</th>
         </tr>
@@ -48,11 +50,15 @@
           <td>-</td>
           <td>-</td>
           <td>-</td>
+          <td>-</td>
+          <td>-</td>
         </tr>
         <ng-template #showTable>
           <tr *ngFor="let item of billingList.DETALLES">
             <th scope="row">{{item.CODIGO_ARTICULO}}</th>
             <td>{{item.ARTICULO}}</td>
+            <td>{{item.PRECIO | number : '1.2'}}</td>
+            <td>{{item.CANTIDAD}}</td>
             <td>{{item.TOTAL_LINEA | number : '1.0'}}</td>
             <td>
               <button class="btn btn-danger" (click)="removeLine(item.LINEA, sendBill)">
