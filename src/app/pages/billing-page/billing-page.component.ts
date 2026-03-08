@@ -2,7 +2,7 @@ import { ProductList } from './../../models/product';
 import { BillingService } from './../../services/billing.service';
 import { AlertService } from './../../services/alert.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Factura } from '../../models/factura.model';
 
 @Component({
@@ -25,13 +25,13 @@ export class BillingPageComponent implements OnInit {
     private alertService: AlertService
   ) {
     this.formBill = this.formBuilder.group({
-      billNumber: [''],
-      date: [''],
+      billNumber: ['', [Validators.required, Validators.minLength(1)]],
+      date: ['', Validators.required],
     });
 
     this.formDetail = this.formBuilder.group({
-      qty: [''],
-      articleCode: [''],
+      qty: ['', [Validators.required, Validators.min(1)]],
+      articleCode: ['', Validators.required],
     });
   }
 
@@ -40,20 +40,24 @@ export class BillingPageComponent implements OnInit {
   }
 
   public save(): void {
-    this.sendBill = this.formBill.get('billNumber')?.value;
-    this.sendDate = this.formBill.get('date')?.value;
+    if (this.formBill.valid) {
+      this.sendBill = this.formBill.get('billNumber')?.value;
+      this.sendDate = this.formBill.get('date')?.value;
 
-    this.billingService.createBill(this.sendBill, this.sendDate).subscribe({
-      next: (res: any) => {
-        this.alertService.success(res.ALERTA);
-        this.formBill.reset();
-        this.getBillingList();
-      },
-      error:(error) => {
-        console.error(error);
-      }
+      this.billingService.createBill(this.sendBill, this.sendDate).subscribe({
+        next: (res: any) => {
+          this.alertService.success(res.ALERTA);
+          this.formBill.reset();
+          this.getBillingList();
+        },
+        error:(error) => {
+          console.error(error);
+        }
+      });
+    } else {
+      this.markFormGroupTouched(this.formBill);
+      this.alertService.error('Por favor complete todos los campos requeridos');
     }
-    );
   }
 
   public getProductList(): void {
@@ -68,19 +72,24 @@ export class BillingPageComponent implements OnInit {
   }
 
   public sendNewLine(): void {
-    let qty = this.formDetail.get('qty')?.value;
-    let code = this.formDetail.get('articleCode')?.value;
+    if (this.formDetail.valid && this.sendBill) {
+      let qty = this.formDetail.get('qty')?.value;
+      let code = this.formDetail.get('articleCode')?.value;
 
-    this.billingService.createNewLine(this.sendBill, code, qty).subscribe({
-      next: (res: any) => {
-        this.alertService.success(res.ALERTA);
-        this.getBillingList();
-        this.formDetail.reset();
-      },
-      error: (error) => {
-        console.error(error);
-      },
-    });
+      this.billingService.createNewLine(this.sendBill, code, qty).subscribe({
+        next: (res: any) => {
+          this.alertService.success(res.ALERTA);
+          this.getBillingList();
+          this.formDetail.reset();
+        },
+        error: (error) => {
+          console.error(error);
+        },
+      });
+    } else {
+      this.markFormGroupTouched(this.formDetail);
+      this.alertService.error('Por favor complete todos los campos requeridos y asegúrese de tener una factura activa');
+    }
   }
 
   public getBillingList(): void {
@@ -114,5 +123,12 @@ export class BillingPageComponent implements OnInit {
       (element) => (suma += element.TOTAL_LINEA)
     );
     return suma;
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+    });
   }
 }
