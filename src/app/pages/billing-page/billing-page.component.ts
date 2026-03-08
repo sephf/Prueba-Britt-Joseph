@@ -74,11 +74,18 @@ export class BillingPageComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (res: any) => {
-            this.alertService.success(res.ALERTA);
-            this.formBill.reset();
-            this.getBillingList();
+            // Verificar si la respuesta tiene un campo de error o si el mensaje indica un error
+            if (res.error || res.ALERTA?.toLowerCase().includes('error')) {
+              this.alertService.error(res.ALERTA || 'Error al crear la factura');
+            } else {
+              this.alertService.success(res.ALERTA || 'Factura creada exitosamente');
+              this.formBill.reset();
+              this.getBillingList();
+            }
           },
           error: (error) => {
+            const errorMessage = error.error?.ALERTA || error.error?.message || 'Error inesperado al crear la factura';
+            this.alertService.error(errorMessage);
             console.error(error);
           }
         });
@@ -97,11 +104,18 @@ export class BillingPageComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (res: any) => {
-            this.alertService.success(res.ALERTA);
-            this.getBillingList();
-            this.formDetail.reset();
+            // Verificar si la respuesta tiene un campo de error o si el mensaje indica un error
+            if (res.error || res.ALERTA?.toLowerCase().includes('error')) {
+              this.alertService.error(res.ALERTA || 'Error al agregar línea');
+            } else {
+              this.alertService.success(res.ALERTA || 'Línea agregada exitosamente');
+              this.getBillingList();
+              this.formDetail.reset();
+            }
           },
           error: (error) => {
+            const errorMessage = error.error?.ALERTA || error.error?.message || 'Error inesperado al agregar línea';
+            this.alertService.error(errorMessage);
             console.error(error);
           },
         });
@@ -130,10 +144,17 @@ export class BillingPageComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res: any) => {
-          this.alertService.success(res.ALERTA);
-          this.getBillingList();
+          // Verificar si la respuesta tiene un campo de error o si el mensaje indica un error
+          if (res.error || res.ALERTA?.toLowerCase().includes('error')) {
+            this.alertService.error(res.ALERTA || 'Error al eliminar línea');
+          } else {
+            this.alertService.success(res.ALERTA || 'Línea eliminada exitosamente');
+            this.getBillingList();
+          }
         },
         error: (error) => {
+          const errorMessage = error.error?.ALERTA || error.error?.message || 'Error inesperado al eliminar línea';
+          this.alertService.error(errorMessage);
           console.error(error);
         },
       });

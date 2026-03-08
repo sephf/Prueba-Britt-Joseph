@@ -1,154 +1,249 @@
-<nav class="navbar navbar-expand-lg navbar-light gradient">
+<nav class="navbar navbar-expand-lg navbar-light gradient shadow-sm">
   <div class="container-fluid">
-    <a class="navbar-brand"></a>
+    <a class="navbar-brand fw-bold text-white d-flex align-items-center" href="#">
+      <i class="bi bi-receipt-cutoff me-2"></i>
+      Factura Britt
+    </a>
   </div>
 </nav>
 
-
-<div class="container-fluid px-5">
-
-
-  <h1 class="display-2">Factura Britt</h1>
-  <p class="lead text-muted">
-    by Pruebas
-  </p>
-
-
-  <div *ngIf="productList; else loader" >
-    <div class="">
-      <h5>Factura <span *ngIf="sendBill" class="">{{ sendBill | uppercase }}</span> Fecha <span class="">{{sendDate | date: 'dd/MM/yy'}}</span>Total <span class="">{{total | number : '1.0'}}</span></h5>
-    </div>
-
-    <div class="">
-      <div class="">
-        <button type="button" class="btn btn-primary " data-bs-toggle="modal" data-bs-target="#exampleModal">
-          NUEVA FACTURA
-        </button>
-      </div>
-      <div class="col d-flex justify-content-start">
-        <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#exampleModal2">
-          NUEVA LINEA
-        </button>
+<div class="container-fluid px-4 py-4">
+  <!-- Header Section -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <p class="lead text-muted mb-0">Sistema de gestión de facturas</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            <i class="bi bi-plus-circle me-2"></i>
+            Nueva Factura
+          </button>
+          <button type="button" class="btn btn-outline-secondary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#exampleModal2" [disabled]="!sendBill">
+            <i class="bi bi-plus-square me-2"></i>
+            Nueva Línea
+          </button>
+        </div>
       </div>
     </div>
+  </div>
 
-    <table class="table table-hover">
-      <thead class="table">
-        <tr>
-          <th scope="col">Sku</th>
-          <th scope="col">Producto</th>
-          <th scope="col">Precio</th>
-          <th scope="col">Cantidad</th>
-          <th scope="col">Total</th>
-          <th scope="col">Acción</th>
-        </tr>
-      </thead>
+  <!-- Current Bill Info -->
+  <div *ngIf="sendBill" class="row mb-4">
+    <div class="col-12">
+      <div class="card border-primary shadow-sm">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-receipt text-primary me-3 fs-4"></i>
+                <div>
+                  <small class="text-muted d-block">Factura</small>
+                  <span class="fw-bold fs-5">{{ sendBill | uppercase }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-calendar text-primary me-3 fs-4"></i>
+                <div>
+                  <small class="text-muted d-block">Fecha</small>
+                  <span class="fw-bold fs-5">{{ sendDate | date: 'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-cash text-success me-3 fs-4"></i>
+                <div>
+                  <small class="text-muted d-block">Total</small>
+                  <span class="fw-bold fs-5 text-success">${{ total | number : '1.0' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      <tbody>
-        <tr *ngIf="!billingList || billingList.DETALLES.length == 0; else showTable">
-          <th scope="row">-</th>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
-        </tr>
-        <ng-template #showTable>
-          <tr *ngFor="let item of billingList.DETALLES">
-            <th scope="row">{{item.CODIGO_ARTICULO}}</th>
-            <td>{{item.ARTICULO}}</td>
-            <td>{{item.PRECIO | number : '1.2'}}</td>
-            <td>{{item.CANTIDAD}}</td>
-            <td>{{item.TOTAL_LINEA | number : '1.0'}}</td>
-            <td>
-              <button class="btn btn-danger" (click)="removeLine(item.LINEA, sendBill)">
-                <i class="bi bi-trash3"></i>
-              </button>
-            </td>
-          </tr>
-        </ng-template>
-      </tbody>
-    </table>
+  <!-- Table Section -->
+  <div *ngIf="productList; else loader" class="row">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-light">
+          <h5 class="card-title mb-0 d-flex align-items-center">
+            <i class="bi bi-table me-2"></i>
+            Detalles de la Factura
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-secondary">
+                <tr>
+                  <th scope="col" class="fw-bold">SKU</th>
+                  <th scope="col" class="fw-bold">Producto</th>
+                  <th scope="col" class="fw-bold text-end">Precio</th>
+                  <th scope="col" class="fw-bold text-center">Cantidad</th>
+                  <th scope="col" class="fw-bold text-end">Total</th>
+                  <th scope="col" class="fw-bold text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="!billingList?.DETALLES || billingList.DETALLES.length == 0; else showTable" class="text-center">
+                  <td colspan="6" class="py-5 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    No hay líneas en la factura
+                  </td>
+                </tr>
+                <ng-template #showTable>
+                  <tr *ngFor="let item of billingList.DETALLES">
+                    <th scope="row" class="fw-semibold">{{item.CODIGO_ARTICULO}}</th>
+                    <td>{{item.ARTICULO}}</td>
+                    <td class="text-end">${{item.PRECIO | number : '1.2' }}</td>
+                    <td class="text-center">{{item.CANTIDAD}}</td>
+                    <td class="text-end fw-bold">${{item.TOTAL_LINEA | number : '1.0' }}</td>
+                    <td class="text-center">
+                      <button class="btn btn-outline-danger btn-sm" (click)="removeLine(item.LINEA, sendBill)" title="Eliminar línea">
+                        <i class="bi bi-trash3"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </ng-template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <ng-template #loader>
-    <div class="d-flex justify-content-center pt-10" style="min-height: 40vh">
-      <div class="spinner-border" role="status" style="width: 6rem; height: 6rem">
-        <span class="visually-hidden">Loading...</span>
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-center align-items-center py-5" style="min-height: 40vh">
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando productos...</p>
+          </div>
+        </div>
       </div>
     </div>
   </ng-template>
 </div>
 
 
-<!-- Modal -->
+<!-- Modal Nueva Factura -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Nueva Factura</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title d-flex align-items-center" id="exampleModalLabel">
+          <i class="bi bi-plus-circle me-2"></i>
+          Nueva Factura
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form [formGroup]="formBill">
-            <div class="mb-3">
-              <label for="billNumber" class="form-label">Numero de factura</label>
-              <input type="text" class="form-control" [class.is-invalid]="formBill.get('billNumber')?.invalid && formBill.get('billNumber')?.touched" id="billNumber" formControlName="billNumber">
-              <div class="invalid-feedback" *ngIf="formBill.get('billNumber')?.invalid && formBill.get('billNumber')?.touched">
-                El número de factura es requerido
-              </div>
+          <div class="mb-3">
+            <label for="billNumber" class="form-label fw-semibold">
+              <i class="bi bi-hash me-1"></i>
+              Número de factura
+            </label>
+            <input type="text" class="form-control form-control-lg" [class.is-invalid]="formBill.get('billNumber')?.invalid && formBill.get('billNumber')?.touched" id="billNumber" formControlName="billNumber" placeholder="Ingrese el número de factura">
+            <div class="invalid-feedback" *ngIf="formBill.get('billNumber')?.invalid && formBill.get('billNumber')?.touched">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              El número de factura es requerido
             </div>
-            <div class="mb-3">
-              <label for="date" class="form-label">Fecha</label>
-              <input type="date" class="form-control" [class.is-invalid]="formBill.get('date')?.invalid && formBill.get('date')?.touched" id="date" formControlName="date">
-              <div class="invalid-feedback" *ngIf="formBill.get('date')?.invalid && formBill.get('date')?.touched">
-                La fecha es requerida
-              </div>
+          </div>
+          <div class="mb-3">
+            <label for="date" class="form-label fw-semibold">
+              <i class="bi bi-calendar-event me-1"></i>
+              Fecha
+            </label>
+            <input type="date" class="form-control form-control-lg" [class.is-invalid]="formBill.get('date')?.invalid && formBill.get('date')?.touched" id="date" formControlName="date" lang="es">
+            <div class="invalid-feedback" *ngIf="formBill.get('date')?.invalid && formBill.get('date')?.touched">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              La fecha es requerida
             </div>
+          </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="save()">Guardar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i>
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="save()">
+          <i class="bi bi-check-circle me-1"></i>
+          Guardar factura
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal -->
-<div *ngIf="productList" class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<!-- Modal Nueva Línea -->
+<div *ngIf="productList" class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel2" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Nueva Línea</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title d-flex align-items-center" id="exampleModalLabel2">
+          <i class="bi bi-plus-square me-2"></i>
+          Nueva Línea
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form [formGroup]="formDetail">
           <div class="mb-3">
-            <label for="articleCode" class="form-label">Producto</label>
-            <select class="form-select" [class.is-invalid]="formDetail.get('articleCode')?.invalid && formDetail.get('articleCode')?.touched" aria-label="Default select example" formControlName="articleCode">
+            <label for="articleCode" class="form-label fw-semibold">
+              <i class="bi bi-box-seam me-1"></i>
+              Producto
+            </label>
+            <select class="form-select form-select-lg" [class.is-invalid]="formDetail.get('articleCode')?.invalid && formDetail.get('articleCode')?.touched" aria-label="Seleccionar producto" formControlName="articleCode">
               <option value="" selected>Seleccione un producto</option>
               <option *ngFor="let item of productList.PRODUCTOS" [value]="item.CODIGO_ARTICULO">
-                {{item.DESCRIPCION}}
+                {{item.DESCRIPCION}} - ${{item.PRECIO | number : '1.2'}}
               </option>
             </select>
             <div class="invalid-feedback" *ngIf="formDetail.get('articleCode')?.invalid && formDetail.get('articleCode')?.touched">
+              <i class="bi bi-exclamation-triangle me-1"></i>
               Debe seleccionar un producto
             </div>
           </div>
           <div class="mb-3">
-            <label for="qty" class="form-label">Cantidad</label>
-            <input type="number" class="form-control" [class.is-invalid]="formDetail.get('qty')?.invalid && formDetail.get('qty')?.touched" id="qty" formControlName="qty" min="1">
+            <label for="qty" class="form-label fw-semibold">
+              <i class="bi bi-123 me-1"></i>
+              Cantidad
+            </label>
+            <input type="number" class="form-control form-control-lg" [class.is-invalid]="formDetail.get('qty')?.invalid && formDetail.get('qty')?.touched" id="qty" formControlName="qty" min="1" placeholder="Ingrese la cantidad">
             <div class="invalid-feedback" *ngIf="formDetail.get('qty')?.invalid && formDetail.get('qty')?.touched">
-              <span *ngIf="formDetail.get('qty')?.errors?.['required']">La cantidad es requerida</span>
-              <span *ngIf="formDetail.get('qty')?.errors?.['min']">La cantidad debe ser mayor a 0</span>
+              <span *ngIf="formDetail.get('qty')?.errors?.['required']">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                La cantidad es requerida
+              </span>
+              <span *ngIf="formDetail.get('qty')?.errors?.['min']">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                La cantidad debe ser mayor a 0
+              </span>
             </div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="sendNewLine()">
-          Guardar
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i>
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal" (click)="sendNewLine()">
+          <i class="bi bi-check-circle me-1"></i>
+          Agregar línea
         </button>
       </div>
     </div>
