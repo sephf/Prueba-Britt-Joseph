@@ -5,6 +5,7 @@ import { catchError } from 'rxjs/operators';
 import { ProductList } from '../models/product';
 import { environment } from '../../environments/environment';
 import { AlertService } from './alert.service';
+import { Factura } from '../models/factura.model';
 @Injectable({
   providedIn: 'root',
 })
@@ -58,8 +59,8 @@ export class BillingService {
     );
   }
 
-  public getBillingLis(billNumber: string): Observable<any> {
-    return this.http.get<any>(
+  public getFactura(billNumber: string): Observable<Factura> {
+    return this.http.get<Factura>(
       `${environment.apiUrl}method=ObtieneFactura&token=${environment.token}&numero_factura=${billNumber}`
     ).pipe(
       catchError((error: HttpErrorResponse) => {

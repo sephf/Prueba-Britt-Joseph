@@ -1,7 +1,9 @@
 import { ProductList } from './../../models/product';
 import { BillingService } from './../../services/billing.service';
+import { AlertService } from './../../services/alert.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { Factura } from '../../models/factura.model';
 
 @Component({
   selector: 'app-billing-page',
@@ -14,13 +16,13 @@ export class BillingPageComponent implements OnInit {
   sendDate!: string;
   formDetail!: FormGroup;
   productList!: ProductList;
-  billingList!: any;
-  message!: string;
+  billingList!: Factura;
   total: number = 0;
 
   constructor(
     private formBuilder: FormBuilder,
-    private billingService: BillingService
+    private billingService: BillingService,
+    private alertService: AlertService
   ) {
     this.formBill = this.formBuilder.group({
       billNumber: [''],
@@ -43,13 +45,12 @@ export class BillingPageComponent implements OnInit {
 
     this.billingService.createBill(this.sendBill, this.sendDate).subscribe({
       next: (res: any) => {
-        this.message = res.ALERTA;
+        this.alertService.success(res.ALERTA);
         this.formBill.reset();
         this.getBillingList();
       },
       error:(error) => {
         console.error(error);
-        this.message = error.error;
       }
     }
     );
@@ -62,7 +63,6 @@ export class BillingPageComponent implements OnInit {
       },
       error:(error) => {
         console.error(error);
-        this.message = error.error;
       }
     });
   }
@@ -73,26 +73,24 @@ export class BillingPageComponent implements OnInit {
 
     this.billingService.createNewLine(this.sendBill, code, qty).subscribe({
       next: (res: any) => {
-        this.message = res.ALERTA;
+        this.alertService.success(res.ALERTA);
         this.getBillingList();
         this.formDetail.reset();
       },
       error: (error) => {
         console.error(error);
-        this.message = error.error;
       },
     });
   }
 
   public getBillingList(): void {
-    this.billingService.getBillingLis(this.sendBill).subscribe({
-      next:(res: any) => {
+    this.billingService.getFactura(this.sendBill).subscribe({
+      next:(res: Factura) => {
         this.billingList = res;
         this.total = this.sumTotal(res);
       },
       error: (error) => {
         console.error(error);
-        this.message = error.error;
       },
     });
   }
@@ -100,21 +98,20 @@ export class BillingPageComponent implements OnInit {
   public removeLine(line: number, billNumber: string): void {
     this.billingService.removeNewLine(line, billNumber).subscribe({
       next: (res: any) => {
-        this.message = res.ALERTA;
+        this.alertService.success(res.ALERTA);
         this.getBillingList();
       },
       error: (error) => {
         console.error(error);
-        this.message = error.error;
       },
     });
   }
 
-  private sumTotal(bill: any): number {
+  private sumTotal(bill: Factura): number {
     let suma = 0;
 
     bill.DETALLES.forEach(
-      (element: any) => (suma += element.TOTAL_LINEA)
+      (element) => (suma += element.TOTAL_LINEA)
     );
     return suma;
   }
