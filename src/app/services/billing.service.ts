@@ -4,11 +4,12 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ProductList } from '../models/product';
 import { environment } from '../../environments/environment';
+import { AlertService } from './alert.service';
 @Injectable({
   providedIn: 'root',
 })
 export class BillingService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private alertService: AlertService) {}
 
   getProductList(): Observable<ProductList> {
     return this.http.get<ProductList>(
@@ -19,7 +20,7 @@ export class BillingService {
           error.error?.message ||
           error.error?.error ||
           "Error inesperado";
-        // TODO: this.alertService.error(message);
+        this.alertService.error(message);
         return throwError(() => error);
       })
     );
@@ -35,7 +36,7 @@ export class BillingService {
           error.error?.message ||
           error.error?.error ||
           "Error inesperado";
-        // TODO: this.alertService.error(message);
+        this.alertService.error(message);
         return throwError(() => error);
       })
     );
@@ -51,7 +52,7 @@ export class BillingService {
           error.error?.message ||
           error.error?.error ||
           "Error inesperado";
-        // TODO: this.alertService.error(message);
+        this.alertService.error(message);
         return throwError(() => error);
       })
     );
@@ -66,7 +67,7 @@ export class BillingService {
           error.error?.message ||
           error.error?.error ||
           "Error inesperado";
-        // TODO: this.alertService.error(message);
+        this.alertService.error(message);
         return throwError(() => error);
       })
     );
@@ -82,7 +83,7 @@ export class BillingService {
           error.error?.message ||
           error.error?.error ||
           "Error inesperado";
-        // TODO: this.alertService.error(message);
+        this.alertService.error(message);
         return throwError(() => error);
       })
     );
