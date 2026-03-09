@@ -1,18 +1,16 @@
 import { ProductList } from './../../models/product';
 import { BillingService } from './../../services/billing.service';
 import { AlertService } from './../../services/alert.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Factura } from '../../models/factura.model';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-billing-page',
   templateUrl: './billing-page.component.html',
   styleUrls: ['./billing-page.component.css'],
 })
-export class BillingPageComponent implements OnInit, OnDestroy {
+export class BillingPageComponent implements OnInit {
   formBill!: FormGroup;
   sendBill!: string;
   sendDate!: string;
@@ -20,8 +18,7 @@ export class BillingPageComponent implements OnInit, OnDestroy {
   productList!: ProductList;
   billingList!: Factura;
   total: number = 0;
-  
-  private destroy$ = new Subject<void>();
+  isAdding: boolean = false;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -29,7 +26,7 @@ export class BillingPageComponent implements OnInit, OnDestroy {
     private alertService: AlertService
   ) {
     this.formBill = this.formBuilder.group({
-      billNumber: ['', [Validators.required, Validators.minLength(1)]],
+      billNumber: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9]+$/)]],
       date: ['', Validators.required],
     });
 
@@ -40,29 +37,7 @@ export class BillingPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadProductList();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  /**
-   * Carga la lista de productos una sola vez al inicializar
-   * El caché se mantiene en el servicio para evitar solicitudes redundantes
-   */
-  private loadProductList(): void {
-    this.billingService.getProductList()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res: ProductList) => {
-          this.productList = res;
-        },
-        error: (error) => {
-          console.error(error);
-        }
-      });
+    this.getProductList();
   }
 
   public save(): void {
@@ -70,109 +45,102 @@ export class BillingPageComponent implements OnInit, OnDestroy {
       this.sendBill = this.formBill.get('billNumber')?.value;
       this.sendDate = this.formBill.get('date')?.value;
 
-      this.billingService.createBill(this.sendBill, this.sendDate)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (res: any) => {
-            // Verificar si la respuesta tiene un campo de error o si el mensaje indica un error
-            if (res.error || res.ALERTA?.toLowerCase().includes('error')) {
-              this.alertService.error(res.ALERTA || 'Error al crear la factura');
-            } else {
-              this.alertService.success(res.ALERTA || 'Factura creada exitosamente');
-              this.formBill.reset();
-              this.getBillingList();
-            }
-          },
-          error: (error) => {
-            const errorMessage = error.error?.ALERTA || error.error?.message || 'Error inesperado al crear la factura';
-            this.alertService.error(errorMessage);
-            console.error(error);
-          }
-        });
+      this.billingService.createBill(this.sendBill, this.sendDate).subscribe({
+        next: (res: any) => {
+          this.alertService.success(res.ALERTA);
+          this.formBill.reset();
+          this.getBillingList();
+        },
+        error:(error) => {
+          console.error(error);
+        }
+      });
     } else {
       this.markFormGroupTouched(this.formBill);
       this.alertService.error('Por favor complete todos los campos requeridos');
     }
   }
 
-  public sendNewLine(): void {
-    if (this.formDetail.valid && this.sendBill) {
-      const qty = this.formDetail.get('qty')?.value;
-      const code = this.formDetail.get('articleCode')?.value;
-
-      this.billingService.createNewLine(this.sendBill, code, qty)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (res: any) => {
-            // Verificar si la respuesta tiene un campo de error o si el mensaje indica un error
-            if (res.error || res.ALERTA?.toLowerCase().includes('error')) {
-              this.alertService.error(res.ALERTA || 'Error al agregar línea');
-            } else {
-              this.alertService.success(res.ALERTA || 'Línea agregada exitosamente');
-              this.getBillingList();
-              this.formDetail.reset();
-            }
-          },
-          error: (error) => {
-            const errorMessage = error.error?.ALERTA || error.error?.message || 'Error inesperado al agregar línea';
-            this.alertService.error(errorMessage);
-            console.error(error);
-          },
-        });
-    } else {
-      this.markFormGroupTouched(this.formDetail);
-      this.alertService.error('Por favor complete todos los campos requeridos y asegúrese de tener una factura activa');
-    }
+  public getProductList(): void {
+    this.billingService.getProductList().subscribe({
+      next:(res: ProductList) => {
+        this.productList = res;
+      },
+      error:(error) => {
+        console.error(error);
+      }
+    });
   }
 
-  public getBillingList(): void {
-    this.billingService.getFactura(this.sendBill)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res: Factura) => {
-          this.billingList = res;
-          this.total = this.sumTotal(res);
+  public sendNewLine(): void {
+    if (this.formDetail.valid && this.sendBill && !this.isAdding) {
+      this.isAdding = true;
+      const { qty, articleCode } = this.formDetail.value;
+      this.billingService.createNewLine(this.sendBill, articleCode, qty).subscribe({
+        next: (res: any) => {
+          this.alertService.success(res.ALERTA);
+          this.getBillingList();
+          this.formDetail.reset();
+          this.isAdding = false;
         },
         error: (error) => {
           console.error(error);
+          this.isAdding = false;
         },
       });
+    } else {
+      if (this.isAdding) {
+        this.alertService.error('Ya se está agregando una línea');
+      } else {
+        this.markFormGroupTouched(this.formDetail);
+        this.alertService.error('Por favor complete todos los campos requeridos y asegúrese de tener una factura activa');
+      }
+    }
+  }
+  private normalizeDetalles(detalles: any[]) {
+    return (detalles || []).map(item => ({
+      ...item,
+      PRECIO: Number(item.PRECIO),
+      TOTAL_LINEA: Number(item.TOTAL_LINEA)
+    }));
+  }
+  public getBillingList(): void {
+    this.billingService.getFactura(this.sendBill).subscribe({
+      next: (res: Factura) => {
+        const detalles = this.normalizeDetalles(res.DETALLES || []);
+        this.billingList = {
+          ...res,
+          DETALLES: detalles
+        };
+        this.total = this.sumTotal(this.billingList);
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
   }
 
   public removeLine(line: number, billNumber: string): void {
-    this.billingService.removeNewLine(line, billNumber)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res: any) => {
-          // Verificar si la respuesta tiene un campo de error o si el mensaje indica un error
-          if (res.error || res.ALERTA?.toLowerCase().includes('error')) {
-            this.alertService.error(res.ALERTA || 'Error al eliminar línea');
-          } else {
-            this.alertService.success(res.ALERTA || 'Línea eliminada exitosamente');
-            this.getBillingList();
-          }
-        },
-        error: (error) => {
-          const errorMessage = error.error?.ALERTA || error.error?.message || 'Error inesperado al eliminar línea';
-          this.alertService.error(errorMessage);
-          console.error(error);
-        },
-      });
+    this.billingService.removeNewLine(line, billNumber).subscribe({
+      next: (res: any) => {
+        this.alertService.success(res.ALERTA);
+        this.getBillingList();
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
   }
 
-  /**
-   * Calcula el total de la factura sumando todas las líneas
-   */
   private sumTotal(bill: Factura): number {
-    return bill.DETALLES.reduce(
-      (suma, element) => suma + element.TOTAL_LINEA,
-      0
+    let suma = 0;
+
+    (bill.DETALLES || []).forEach(
+      (element) => (suma += element.TOTAL_LINEA)
     );
+    return suma;
   }
 
-  /**
-   * Marca todos los controles del formulario como tocados
-   */
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);

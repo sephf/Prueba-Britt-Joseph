@@ -20,7 +20,7 @@
             <i class="bi bi-plus-circle me-2"></i>
             Nueva Factura
           </button>
-          <button type="button" class="btn btn-outline-secondary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#exampleModal2" [disabled]="!sendBill">
+          <button type="button" class="btn btn-outline-secondary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#exampleModal2" [disabled]="!sendBill || isAdding">
             <i class="bi bi-plus-square me-2"></i>
             Nueva Línea
           </button>
@@ -58,7 +58,7 @@
                 <i class="bi bi-cash text-success me-3 fs-4"></i>
                 <div>
                   <small class="text-muted d-block">Total</small>
-                  <span class="fw-bold fs-5 text-success">${{ total | number : '1.0' }}</span>
+                  <span class="fw-bold fs-5 text-success">${{ total | number : '1.2' }}</span>
                 </div>
               </div>
             </div>
@@ -92,7 +92,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngIf="!billingList?.DETALLES || billingList.DETALLES.length == 0; else showTable" class="text-center">
+                <tr *ngIf="!billingList.DETALLES || billingList.DETALLES.length == 0; else showTable" class="text-center">
                   <td colspan="6" class="py-5 text-muted">
                     <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                     No hay líneas en la factura
@@ -102,9 +102,9 @@
                   <tr *ngFor="let item of billingList.DETALLES">
                     <th scope="row" class="fw-semibold">{{item.CODIGO_ARTICULO}}</th>
                     <td>{{item.ARTICULO}}</td>
-                    <td class="text-end">${{item.PRECIO | number : '1.2' }}</td>
+                    <td class="text-end">${{item.PRECIO | number : '1.3' }}</td>
                     <td class="text-center">{{item.CANTIDAD}}</td>
-                    <td class="text-end fw-bold">${{item.TOTAL_LINEA | number : '1.0' }}</td>
+                    <td class="text-end fw-bold">${{item.TOTAL_LINEA | number : '1.2' }}</td>
                     <td class="text-center">
                       <button class="btn btn-outline-danger btn-sm" (click)="removeLine(item.LINEA, sendBill)" title="Eliminar línea">
                         <i class="bi bi-trash3"></i>
@@ -155,10 +155,14 @@
               <i class="bi bi-hash me-1"></i>
               Número de factura
             </label>
-            <input type="text" class="form-control form-control-lg" [class.is-invalid]="formBill.get('billNumber')?.invalid && formBill.get('billNumber')?.touched" id="billNumber" formControlName="billNumber" placeholder="Ingrese el número de factura">
-            <div class="invalid-feedback" *ngIf="formBill.get('billNumber')?.invalid && formBill.get('billNumber')?.touched">
+            <input type="text" class="form-control form-control-lg" [class.is-invalid]="formBill.get('billNumber')?.invalid && formBill.get('billNumber')?.touched" id="billNumber" formControlName="billNumber" placeholder="Ingrese el número de factura" maxlength="40">
+            <div class="invalid-feedback" *ngIf="formBill.get('billNumber')?.errors?.['required'] && formBill.get('billNumber')?.touched">
               <i class="bi bi-exclamation-triangle me-1"></i>
               El número de factura es requerido
+            </div>
+            <div class="invalid-feedback" *ngIf="formBill.get('billNumber')?.errors?.['pattern'] && formBill.get('billNumber')?.touched">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              El número de factura solo puede contener letras y números
             </div>
           </div>
           <div class="mb-3">
@@ -181,7 +185,7 @@
         </button>
         <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="save()">
           <i class="bi bi-check-circle me-1"></i>
-          Guardar factura
+          Guardar
         </button>
       </div>
     </div>
@@ -209,7 +213,7 @@
             <select class="form-select form-select-lg" [class.is-invalid]="formDetail.get('articleCode')?.invalid && formDetail.get('articleCode')?.touched" aria-label="Seleccionar producto" formControlName="articleCode">
               <option value="" selected>Seleccione un producto</option>
               <option *ngFor="let item of productList.PRODUCTOS" [value]="item.CODIGO_ARTICULO">
-                {{item.DESCRIPCION}} - ${{item.PRECIO | number : '1.2'}}
+                {{item.DESCRIPCION}} - ${{item.PRECIO | number : '1.3'}}
               </option>
             </select>
             <div class="invalid-feedback" *ngIf="formDetail.get('articleCode')?.invalid && formDetail.get('articleCode')?.touched">
@@ -222,7 +226,7 @@
               <i class="bi bi-123 me-1"></i>
               Cantidad
             </label>
-            <input type="number" class="form-control form-control-lg" [class.is-invalid]="formDetail.get('qty')?.invalid && formDetail.get('qty')?.touched" id="qty" formControlName="qty" min="1" placeholder="Ingrese la cantidad">
+            <input type="number" class="form-control form-control-lg" [class.is-invalid]="formDetail.get('qty')?.invalid && formDetail.get('qty')?.touched" id="qty" formControlName="qty" min="1" placeholder="Ingrese la cantidad" max="999">
             <div class="invalid-feedback" *ngIf="formDetail.get('qty')?.invalid && formDetail.get('qty')?.touched">
               <span *ngIf="formDetail.get('qty')?.errors?.['required']">
                 <i class="bi bi-exclamation-triangle me-1"></i>
@@ -243,7 +247,7 @@
         </button>
         <button type="button" class="btn btn-success" data-bs-dismiss="modal" (click)="sendNewLine()">
           <i class="bi bi-check-circle me-1"></i>
-          Agregar línea
+          Agregar
         </button>
       </div>
     </div>
